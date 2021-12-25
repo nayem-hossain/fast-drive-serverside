@@ -88,7 +88,7 @@ async function run() {
       const sslcommer = new SSLCommerzPayment(
         process.env.STORE_ID,
         process.env.STORE_PASSWORD,
-        true
+        false
       ); //true for live default false for sandbox
       sslcommer.init(data).then((data) => {
         //process the response that got from sslcommerz
