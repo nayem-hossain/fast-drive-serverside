@@ -50,7 +50,7 @@ async function run() {
         currency: "USD",
         payment_status: "pending",
         tran_id: uuidv4(),
-        success_url: "http://localhost:5000/success",
+        success_url: "https://stark-reaches-71944.herokuapp.com/success",
         fail_url: "http://localhost:5000/fail",
         cancel_url: "http://localhost:5000/cancel",
         ipn_url: "http://localhost:5000/ipn",
