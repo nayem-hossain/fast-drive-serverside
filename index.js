@@ -1,13 +1,16 @@
 const express = require("express");
 const cors = require("cors");
-const app = express();
-require("dotenv").config();
 const ObjectId = require("mongodb").ObjectId;
+const SSLCommerzPayment = require("sslcommerz");
+const { v4: uuidv4 } = require("uuid");
+require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 // middleware
+const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //Database Connection URI
 const { MongoClient } = require("mongodb");
@@ -36,7 +39,77 @@ async function run() {
     const ordersCollection = database.collection("orders");
     const reviewsCollection = database.collection("reviews");
     const usersCollection = database.collection("users");
+    const orderSuccessCollection = database.collection("successfull_orders");
 
+    // Initialize Payment API
+    app.post("/init", async (req, res) => {
+      console.log(req.body);
+
+      const data = {
+        total_amount: req.body.price,
+        currency: "USD",
+        payment_status: "pending",
+        tran_id: uuidv4(),
+        success_url: "http://localhost:5000/success",
+        fail_url: "http://localhost:5000/fail",
+        cancel_url: "http://localhost:5000/cancel",
+        ipn_url: "http://localhost:5000/ipn",
+        shipping_method: "Courier",
+        product_id: req.body.carID,
+        product_name: req.body.carName,
+        product_image: req.body.carImage,
+        product_category: "CAR",
+        product_profile: "general",
+        cus_name: req.body.FullName,
+        cus_email: req.body.email,
+        cus_phone: req.body.phone,
+        cus_fax: req.body.phone,
+        cus_country: "Bangladesh",
+        cus_postcode: "1000",
+        cus_add1: "Dhaka",
+        cus_add2: "Dhaka",
+        cus_city: "Dhaka",
+        cus_state: "Dhaka",
+        ship_name: req.body.FullName,
+        ship_add1: "Dhaka",
+        ship_add2: "Dhaka",
+        ship_city: "Dhaka",
+        ship_state: "Dhaka",
+        ship_postcode: 1000,
+        ship_country: "Bangladesh",
+        multi_card_name: "mastercard",
+        value_a: "ref001_A",
+        value_b: "ref002_B",
+        value_c: "ref003_C",
+        value_d: "ref004_D",
+      };
+      const order = await ordersCollection.insertOne(data);
+
+      const sslcommer = new SSLCommerzPayment(
+        process.env.STORE_ID,
+        process.env.STORE_PASSWORD,
+        true
+      ); //true for live default false for sandbox
+      sslcommer.init(data).then((data) => {
+        //process the response that got from sslcommerz
+        //https://developer.sslcommerz.com/doc/v4/#returned-parameters
+        console.log(data);
+        if (data.GatewayPageURL) {
+          res.json(data.GatewayPageURL);
+        } else {
+          return req.status(400).json({
+            message: "payment session faild",
+          });
+        }
+      });
+    });
+    app.post("/success", async (req, res) => {
+      console.log(req);
+      // res.status(200).json(req.body);
+      res
+        .status(200)
+        .redirect(`https://fast-drive-nayem.netlify.app/order_success`);
+    });
     // GET ALL PRODUCTS API
     app.get("/products", async (req, res) => {
       const AllProducts = productsCollection.find({});
@@ -79,13 +152,13 @@ async function run() {
     });
 
     // POST ORDER API
-    app.post("/orders", async (req, res) => {
+    /* app.post("/orders", async (req, res) => {
       const order = req.body;
       console.log("hitted the post orders API", order);
       const result = await ordersCollection.insertOne(order);
       console.log(result);
       res.json(result);
-    });
+    }); */
 
     // UPDATE A DOCUMENT
     app.put("/orders/:id", async (req, res) => {
