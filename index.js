@@ -32,7 +32,7 @@ app.listen(port, () => {
 async function run() {
   try {
     await client.connect();
-    console.log("connected to database successfully");
+    console.log("connected to FastDrive database successfully");
 
     const database = client.db("fastDriveDatabase");
     const productsCollection = database.collection("products");
@@ -88,7 +88,7 @@ async function run() {
       const sslcommer = new SSLCommerzPayment(
         process.env.STORE_ID,
         process.env.STORE_PASSWORD,
-        false
+        true
       ); //true for live default false for sandbox
       sslcommer.init(data).then((data) => {
         //process the response that got from sslcommerz
@@ -106,9 +106,7 @@ async function run() {
     app.post("/success", async (req, res) => {
       console.log(req);
       // res.status(200).json(req.body);
-      res
-        .status(200)
-        .redirect(`https://fast-drive-nayem.netlify.app/order_success`);
+      res.status(200).redirect(`https://fast-drive-nayem.netlify.app/order_success`);
     });
     // GET ALL PRODUCTS API
     app.get("/products", async (req, res) => {
